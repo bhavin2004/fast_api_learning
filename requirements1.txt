@@ -9,3 +9,5 @@ python-jose[cryptography]
 pytest
 httpx
 pytest-asyncio
+jinja2
+aiofiles
