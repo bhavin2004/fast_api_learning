@@ -1,12 +1,20 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,Request
 from .models import Base
 from .database import engine  
 from .router import auth,todo,admin,user
-from pydantic import BaseModel,Field
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
+
+# templates = Jinja2Templates(directory="todo/templates")
+app.mount('/static',StaticFiles(directory='todo/static'),name='static')
+
+@app.get("/")
+def home(request: Request):
+    return RedirectResponse('/todos/todo-page')
 
 @app.get('/healthy')
 def health_check():

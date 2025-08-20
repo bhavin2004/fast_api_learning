@@ -1,4 +1,4 @@
-from fastapi import APIRouter,Depends,HTTPException
+from fastapi import APIRouter,Depends,HTTPException,Request
 from pydantic import BaseModel,Field
 from ..models import Users
 from passlib.context import CryptContext
@@ -9,6 +9,7 @@ from starlette import status
 from fastapi.security import OAuth2PasswordRequestForm,OAuth2PasswordBearer
 from jose import jwt,JWTError
 from datetime import timezone,datetime,timedelta
+from fastapi.templating import Jinja2Templates
 
 
 router = APIRouter(
@@ -39,7 +40,7 @@ def connect_db():
         db.close()
 
 db_config = Annotated[Session,Depends(connect_db)]
-
+templates = Jinja2Templates(directory="todo/templates")
 def authenticate_user(username: str,pwd:str, db:db_config):
     user = db.query(Users).filter(Users.username == username).first()
     
@@ -75,6 +76,7 @@ async def get_current_user(token: Annotated[str , Depends(oauth2_bearer)]):
         raise HTTPException(401,"Could not validate user.")
 
 
+
 @router.post('/',status_code=status.HTTP_201_CREATED)
 def create_user(create_user_request: UserRequest,
                 db: db_config):
@@ -93,7 +95,14 @@ def create_user(create_user_request: UserRequest,
     
     # return create_user_model
 
+@router.get('/login-page',status_code=200)
+def get_login_page(request: Request):
+    return (templates.TemplateResponse('login.html',{'request':request}))
 
+
+@router.get('/register-page',status_code=200)
+def render_register_page(request: Request):
+    return templates.TemplateResponse('register.html',{'request':request})
 @router.post("/token",status_code=status.HTTP_201_CREATED)
 def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,Depends()],
                            db:db_config):
